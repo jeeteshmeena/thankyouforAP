@@ -78,7 +78,9 @@ function Index() {
   return (
     <main className="min-h-dvh w-full bg-page p-3 font-sans sm:p-4">
       <section
-        className={`relative h-[calc(100dvh-24px)] w-full overflow-hidden rounded-2xl bg-stage will-change-transform sm:h-[calc(100dvh-32px)] sm:rounded-3xl ${closing ? "window-closing" : ""}`}
+        className={`relative h-[calc(100dvh-24px)] w-full overflow-hidden rounded-2xl bg-stage will-change-transform sm:h-[calc(100dvh-32px)] sm:rounded-3xl ${
+          closing && !closed ? "window-closing" : closed ? "soft-in" : ""
+        }`}
       >
         <div className="flashlight-in absolute inset-0">
           <video
