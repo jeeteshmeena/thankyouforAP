@@ -75,6 +75,7 @@ function closeTelegramBrowser() {
 function Index() {
   const [lang, setLang] = useState<"en" | "hi">("en");
   const [closing, setClosing] = useState(false);
+  const [dismissing, setDismissing] = useState(false);
   const [closed, setClosed] = useState(false);
   const timers = useRef<number[]>([]);
   const t = copy[lang];
@@ -93,6 +94,7 @@ function Index() {
     // The pointer glides up to the Telegram tab's close control, clicks it,
     // and only then does the sheet dismiss and the in-app browser close.
     timers.current.push(
+      window.setTimeout(() => setDismissing(true), 1050),
       window.setTimeout(() => setClosed(true), 1500),
       window.setTimeout(() => closeTelegramBrowser(), 1620),
     );
@@ -102,7 +104,7 @@ function Index() {
     <main className="min-h-dvh w-full bg-page p-3 font-sans sm:p-4">
       <section
         className={`relative h-[calc(100dvh-24px)] w-full overflow-hidden rounded-2xl bg-stage will-change-transform sm:h-[calc(100dvh-32px)] sm:rounded-3xl ${
-          closing && !closed ? "window-closing" : closed ? "soft-in" : ""
+          dismissing && !closed ? "window-closing" : closed ? "soft-in" : ""
         }`}
       >
         <div className="flashlight-in absolute inset-0">
