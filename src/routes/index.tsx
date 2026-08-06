@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useFitText } from "@/hooks/use-fit-text";
+import { useFontsReady } from "@/hooks/use-fonts-ready";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -29,7 +31,12 @@ const copy = {
     line: "Your payment is successful.",
     sub: "You can now safely close this window or tab in your Telegram browser.",
     toggle: "हिन्दी",
-    label: "Switch language",
+    label: "Switch language to Hindi",
+    close: "Close window",
+    closeLabel: "Close this window or tab",
+    closed: "This window is ready to be closed.",
+    closedHint: "If it stays open, close the tab manually from your browser.",
+    announce: "Language changed to English",
   },
   hi: {
     title: "आपकी ख़रीद के लिए",
@@ -37,19 +44,44 @@ const copy = {
     line: "आपका भुगतान सफलतापूर्वक पूरा हुआ।",
     sub: "अब आप अपने टेलीग्राम ब्राउज़र में यह विंडो या टैब बंद कर सकते हैं।",
     toggle: "English",
-    label: "भाषा बदलें",
+    label: "भाषा बदलकर अंग्रेज़ी करें",
+    close: "विंडो बंद करें",
+    closeLabel: "यह विंडो या टैब बंद करें",
+    closed: "यह विंडो अब बंद की जा सकती है।",
+    closedHint: "अगर यह खुली रहे, तो ब्राउज़र से टैब ख़ुद बंद कर दें।",
+    announce: "भाषा बदलकर हिन्दी कर दी गई है",
   },
 } as const;
 
 function Index() {
   const [lang, setLang] = useState<"en" | "hi">("en");
+  const [closing, setClosing] = useState(false);
+  const [closed, setClosed] = useState(false);
   const t = copy[lang];
   const isHi = lang === "hi";
   const hiFont = "'Noto Sans Devanagari', 'Inter', sans-serif";
+  const fontsReady = useFontsReady();
+  const { ref: fitRef, scale } = useFitText<HTMLDivElement>([lang, fontsReady]);
+
+  const closeWindow = useCallback(() => {
+    setClosing(true);
+    window.setTimeout(() => {
+      setClosed(true);
+      try {
+        window.close();
+      } catch {
+        /* browser blocked programmatic close */
+      }
+    }, 720);
+  }, []);
 
   return (
-    <main className="min-h-screen w-full bg-page p-3 font-sans sm:p-4">
-      <section className="relative h-[calc(100vh-24px)] w-full overflow-hidden rounded-2xl bg-stage sm:h-[calc(100vh-32px)] sm:rounded-3xl">
+    <main className="min-h-dvh w-full bg-page p-3 font-sans sm:p-4">
+      <section
+        className={`relative h-[calc(100dvh-24px)] w-full overflow-hidden rounded-2xl bg-stage will-change-transform sm:h-[calc(100dvh-32px)] sm:rounded-3xl ${
+          closing && !closed ? "window-closing" : closed ? "soft-in" : ""
+        }`}
+      >
         <div className="flashlight-in absolute inset-0">
           <video
             className="pointer-events-none absolute inset-0 h-full w-full object-cover"
@@ -72,7 +104,17 @@ function Index() {
           aria-hidden="true"
         />
 
-        <div className="relative z-10 flex h-full flex-col items-center justify-center px-5 text-center sm:px-8">
+        <div className="relative z-10 flex h-full flex-col items-center justify-center px-5 py-8 text-center sm:px-8 sm:py-12">
+          <div
+            ref={fitRef}
+            style={{
+              transform: `scale(${scale})`,
+              transformOrigin: "center",
+              transition: "transform 240ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease",
+              opacity: fontsReady ? 1 : 0,
+            }}
+            className="flex w-full max-w-4xl flex-col items-center"
+          >
           <span
             className="rise-in inline-flex items-center gap-2 rounded-full bg-card px-4 py-1.5 shadow-sm"
             style={{ fontSize: "13px", animationDelay: "0.35s" }}
@@ -84,6 +126,7 @@ function Index() {
           </span>
 
           <h1
+            lang={isHi ? "hi" : "en"}
             className="rise-in mt-5 max-w-4xl text-balance text-ink sm:mt-6"
             style={{
               fontFamily: isHi ? hiFont : undefined,
@@ -109,6 +152,7 @@ function Index() {
           </h1>
 
           <p
+            lang={isHi ? "hi" : "en"}
             className="rise-in mt-4 max-w-2xl text-balance text-ink sm:mt-5"
             style={{
               fontFamily: isHi ? hiFont : undefined,
@@ -123,6 +167,7 @@ function Index() {
           </p>
 
           <p
+            lang={isHi ? "hi" : "en"}
             className="rise-in mt-3 max-w-xl px-2 text-pretty text-ink/70 sm:mt-4"
             style={{
               fontFamily: isHi ? hiFont : undefined,
@@ -135,26 +180,91 @@ function Index() {
             {t.sub}
           </p>
 
-          <button
-            type="button"
-            aria-label={t.label}
-            onClick={() => setLang(lang === "en" ? "hi" : "en")}
-            className="rise-in mt-7 inline-flex items-center gap-3 rounded-full bg-ink py-2 pr-2 pl-6 text-card transition-transform hover:scale-[1.03] sm:mt-9 sm:py-2.5 sm:pl-7"
-            style={{
-              fontFamily: isHi ? undefined : hiFont,
-              fontSize: "14px",
-              fontWeight: 500,
-              letterSpacing: "0.01em",
-              animationDelay: "0.75s",
-            }}
-          >
-            {t.toggle}
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-card/15 sm:h-7 sm:w-7">
-              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 6 15 12 9 18" />
-              </svg>
-            </span>
-          </button>
+          {closed ? (
+            <p
+              lang={isHi ? "hi" : "en"}
+              className="soft-in mt-7 max-w-md rounded-2xl bg-card/90 px-5 py-4 text-ink shadow-sm sm:mt-9"
+              style={{
+                fontFamily: isHi ? hiFont : undefined,
+                fontSize: "14px",
+                lineHeight: isHi ? 1.7 : 1.55,
+              }}
+            >
+              {t.closed}
+              <span className="mt-1 block text-ink/60" style={{ fontSize: "12.5px" }}>
+                {t.closedHint}
+              </span>
+            </p>
+          ) : (
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:mt-9">
+              <button
+                type="button"
+                lang={isHi ? "en" : "hi"}
+                aria-label={t.label}
+                title={t.label}
+                onClick={() => setLang(isHi ? "en" : "hi")}
+                className="rise-in inline-flex min-h-11 items-center gap-3 rounded-full bg-ink py-2 pr-2 pl-6 text-card transition-transform outline-none hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:py-2.5 sm:pl-7"
+                style={{
+                  fontFamily: isHi ? undefined : hiFont,
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  letterSpacing: "0.01em",
+                  animationDelay: "0.75s",
+                }}
+              >
+                {t.toggle}
+                <span
+                  aria-hidden="true"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-card/15"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 6 15 12 9 18" />
+                  </svg>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                lang={isHi ? "hi" : "en"}
+                aria-label={t.closeLabel}
+                onClick={closeWindow}
+                className="rise-in inline-flex min-h-11 items-center gap-2 rounded-full bg-card/90 px-5 py-2 text-ink shadow-sm transition-transform outline-none hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:py-2.5"
+                style={{
+                  fontFamily: isHi ? hiFont : undefined,
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  animationDelay: "0.85s",
+                }}
+              >
+                {t.close}
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+          </div>
+
+          <p aria-live="polite" className="sr-only">
+            {t.announce}
+          </p>
         </div>
       </section>
     </main>
