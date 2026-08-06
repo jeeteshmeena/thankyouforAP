@@ -123,7 +123,7 @@ function Index() {
           </p>
 
           <p
-            className="rise-in mt-3 max-w-xl px-2 text-pretty text-muted-foreground sm:mt-4"
+            className="rise-in mt-3 max-w-xl px-2 text-pretty text-ink/70 sm:mt-4"
             style={{
               fontFamily: isHi ? hiFont : undefined,
               fontSize: isHi ? "clamp(13px, 3.3vw, 16px)" : "clamp(13.5px, 3.4vw, 16.5px)",
