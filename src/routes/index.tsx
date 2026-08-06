@@ -24,7 +24,6 @@ export const Route = createFileRoute("/")({
 
 const copy = {
   en: {
-    badge: "Convix Software",
     title: "Thanks for your",
     titleItalic: "purchase",
     line: "Your payment is successful.",
@@ -33,7 +32,6 @@ const copy = {
     label: "Switch language",
   },
   hi: {
-    badge: "कॉन्विक्स सॉफ़्टवेयर",
     title: "आपकी ख़रीद के लिए",
     titleItalic: "धन्यवाद",
     line: "आपका भुगतान सफलतापूर्वक पूरा हुआ।",
@@ -46,6 +44,8 @@ const copy = {
 function Index() {
   const [lang, setLang] = useState<"en" | "hi">("en");
   const t = copy[lang];
+  const isHi = lang === "hi";
+  const hiFont = "'Noto Sans Devanagari', 'Inter', sans-serif";
 
   return (
     <main className="min-h-screen w-full bg-page p-3 font-sans sm:p-4">
@@ -78,23 +78,28 @@ function Index() {
             style={{ fontSize: "13px", animationDelay: "0.35s" }}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-            <span className="text-ink">{t.badge}</span>
+            <span className="text-ink" style={{ letterSpacing: "0.01em", fontWeight: 500 }}>
+              SliceURL
+            </span>
           </span>
 
           <h1
-            className="rise-in mt-5 max-w-4xl text-ink sm:mt-6"
+            className="rise-in mt-5 max-w-4xl text-balance text-ink sm:mt-6"
             style={{
-              fontSize: "clamp(34px, 7.5vw, 68px)",
-              lineHeight: 1.06,
+              fontFamily: isHi ? hiFont : undefined,
+              fontSize: isHi ? "clamp(30px, 6.6vw, 58px)" : "clamp(34px, 7.6vw, 68px)",
+              lineHeight: isHi ? 1.28 : 1.06,
               fontWeight: 500,
-              letterSpacing: "-0.02em",
+              letterSpacing: isHi ? "0" : "-0.02em",
               animationDelay: "0.45s",
             }}
           >
             {t.title}{" "}
             <span
               style={{
-                fontFamily: "'Instrument Serif', serif",
+                fontFamily: isHi
+                  ? "'Tiro Devanagari Hindi', 'Noto Sans Devanagari', serif"
+                  : "'Instrument Serif', serif",
                 fontStyle: "italic",
                 fontWeight: 400,
               }}
@@ -104,15 +109,28 @@ function Index() {
           </h1>
 
           <p
-            className="rise-in mt-4 max-w-2xl font-medium text-ink sm:mt-5"
-            style={{ fontSize: "clamp(17px, 4.4vw, 26px)", animationDelay: "0.55s" }}
+            className="rise-in mt-4 max-w-2xl text-balance text-ink sm:mt-5"
+            style={{
+              fontFamily: isHi ? hiFont : undefined,
+              fontSize: isHi ? "clamp(16px, 4vw, 23px)" : "clamp(17px, 4.4vw, 26px)",
+              lineHeight: isHi ? 1.55 : 1.35,
+              fontWeight: 500,
+              letterSpacing: isHi ? "0" : "-0.01em",
+              animationDelay: "0.55s",
+            }}
           >
             {t.line}
           </p>
 
           <p
-            className="rise-in mt-3 max-w-xl px-2 text-muted-foreground"
-            style={{ fontSize: "clamp(13px, 3.4vw, 16px)", lineHeight: 1.6, animationDelay: "0.65s" }}
+            className="rise-in mt-3 max-w-xl px-2 text-pretty text-muted-foreground sm:mt-4"
+            style={{
+              fontFamily: isHi ? hiFont : undefined,
+              fontSize: isHi ? "clamp(13px, 3.3vw, 16px)" : "clamp(13.5px, 3.4vw, 16.5px)",
+              lineHeight: isHi ? 1.75 : 1.6,
+              letterSpacing: isHi ? "0" : "0.005em",
+              animationDelay: "0.65s",
+            }}
           >
             {t.sub}
           </p>
@@ -122,7 +140,13 @@ function Index() {
             aria-label={t.label}
             onClick={() => setLang(lang === "en" ? "hi" : "en")}
             className="rise-in mt-7 inline-flex items-center gap-3 rounded-full bg-ink py-2 pr-2 pl-6 text-card transition-transform hover:scale-[1.03] sm:mt-9 sm:py-2.5 sm:pl-7"
-            style={{ fontSize: "14px", animationDelay: "0.75s" }}
+            style={{
+              fontFamily: isHi ? undefined : hiFont,
+              fontSize: "14px",
+              fontWeight: 500,
+              letterSpacing: "0.01em",
+              animationDelay: "0.75s",
+            }}
           >
             {t.toggle}
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-card/15 sm:h-7 sm:w-7">
