@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useFitText } from "@/hooks/use-fit-text";
 import { useFontsReady } from "@/hooks/use-fonts-ready";
 
@@ -34,8 +34,9 @@ const copy = {
     label: "Switch language to Hindi",
     close: "Close window",
     closeLabel: "Close this window or tab",
-    closed: "This window is ready to be closed.",
-    closedHint: "If it stays open, close the tab manually from your browser.",
+    closed: "Closing your Telegram tab…",
+    closedHint: "If it stays open, tap the close button in your Telegram browser.",
+    tab: "SliceURL — Payment successful",
     announce: "Language changed to English",
   },
   hi: {
@@ -47,39 +48,63 @@ const copy = {
     label: "भाषा बदलकर अंग्रेज़ी करें",
     close: "विंडो बंद करें",
     closeLabel: "यह विंडो या टैब बंद करें",
-    closed: "यह विंडो अब बंद की जा सकती है।",
-    closedHint: "अगर यह खुली रहे, तो ब्राउज़र से टैब ख़ुद बंद कर दें।",
+    closed: "आपका टेलीग्राम टैब बंद किया जा रहा है…",
+    closedHint: "अगर यह खुला रहे, तो टेलीग्राम ब्राउज़र का क्लोज़ बटन दबाएँ।",
+    tab: "SliceURL — भुगतान सफल",
     announce: "भाषा बदलकर हिन्दी कर दी गई है",
   },
 } as const;
 
+type TelegramWebApp = { close?: () => void; ready?: () => void };
+
+function closeTelegramBrowser() {
+  const tg = (window as unknown as { Telegram?: { WebApp?: TelegramWebApp } }).Telegram?.WebApp;
+  try {
+    tg?.ready?.();
+    tg?.close?.();
+  } catch {
+    /* not inside a Telegram WebApp context */
+  }
+  try {
+    window.close();
+  } catch {
+    /* browser blocked programmatic close */
+  }
+}
+
 function Index() {
   const [lang, setLang] = useState<"en" | "hi">("en");
   const [closing, setClosing] = useState(false);
+  const [dismissing, setDismissing] = useState(false);
   const [closed, setClosed] = useState(false);
+  const timers = useRef<number[]>([]);
   const t = copy[lang];
   const isHi = lang === "hi";
   const hiFont = "'Noto Sans Devanagari', 'Inter', sans-serif";
   const fontsReady = useFontsReady();
   const { ref: fitRef, scale } = useFitText<HTMLDivElement>([lang, fontsReady]);
 
+  useEffect(() => {
+    const ids = timers.current;
+    return () => ids.forEach((id) => window.clearTimeout(id));
+  }, []);
+
   const closeWindow = useCallback(() => {
     setClosing(true);
-    window.setTimeout(() => {
-      setClosed(true);
-      try {
-        window.close();
-      } catch {
-        /* browser blocked programmatic close */
-      }
-    }, 720);
+    // The pointer glides up to the Telegram tab's close control, clicks it,
+    // and only then does the sheet dismiss and the in-app browser close.
+    timers.current.push(
+      window.setTimeout(() => setDismissing(true), 1050),
+      window.setTimeout(() => setClosed(true), 1500),
+      window.setTimeout(() => closeTelegramBrowser(), 1620),
+    );
   }, []);
 
   return (
     <main className="min-h-dvh w-full bg-page p-3 font-sans sm:p-4">
       <section
         className={`relative h-[calc(100dvh-24px)] w-full overflow-hidden rounded-2xl bg-stage will-change-transform sm:h-[calc(100dvh-32px)] sm:rounded-3xl ${
-          closing && !closed ? "window-closing" : closed ? "soft-in" : ""
+          dismissing && !closed ? "window-closing" : closed ? "soft-in" : ""
         }`}
       >
         <div className="flashlight-in absolute inset-0">
@@ -103,6 +128,50 @@ function Index() {
           className="flash-burst pointer-events-none absolute inset-0 z-20 bg-background"
           aria-hidden="true"
         />
+
+        {closing && (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-center px-3 pt-3">
+            <div
+              className={`tab-strip-in relative flex w-full max-w-sm items-center gap-2 rounded-xl bg-card/95 px-3 py-2 shadow-sm ${
+                closed ? "tab-dismiss" : ""
+              }`}
+            >
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
+              <span
+                lang={isHi ? "hi" : "en"}
+                className="flex-1 truncate text-ink/80"
+                style={{ fontFamily: isHi ? hiFont : undefined, fontSize: "12.5px" }}
+              >
+                {t.tab}
+              </span>
+              <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-ink/8 text-ink">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                >
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+                <span className="click-ring absolute inset-0 rounded-full ring-2 ring-ink/50" />
+                <span className="cursor-glide absolute top-3 left-3">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 text-ink drop-shadow-sm">
+                    <path
+                      d="M5 3l14 8.2-6.1 1.2L10.6 19 5 3z"
+                      fill="currentColor"
+                      stroke="var(--color-card)"
+                      strokeWidth="1.2"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="relative z-10 flex h-full flex-col items-center justify-center px-5 py-8 text-center sm:px-8 sm:py-12">
           <div
