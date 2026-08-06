@@ -1,11 +1,19 @@
 @import "tailwindcss" source(none);
-@source "../src";
 @import "tw-animate-css";
+@import "@fontsource-variable/inter";
+@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/instrument-serif/400-italic.css";
+@import "@fontsource-variable/noto-sans-devanagari";
+@import "@fontsource/tiro-devanagari-hindi/400.css";
+@import "@fontsource/tiro-devanagari-hindi/400-italic.css";
+@source "../src";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    "Inter Variable", "Inter", "Noto Sans Devanagari Variable", "Noto Sans Devanagari",
+    ui-sans-serif, system-ui, sans-serif;
   --font-serif-display: "Instrument Serif", "Tiro Devanagari Hindi", serif;
   --color-brand: oklch(0.63 0.2 35);
   --color-page: oklch(0.933 0 0);
